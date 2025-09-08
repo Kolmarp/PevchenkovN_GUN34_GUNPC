@@ -53,7 +53,7 @@
             Console.WriteLine("Увеличенный массив array2: " + string.Join(", ", array));
 
 
-
+           
             
 
 
