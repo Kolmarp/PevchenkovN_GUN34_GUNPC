@@ -10,68 +10,76 @@ namespace Memory
 
         }
     }
-
-    public class Interval
+    public struct Interval
     {
-        private Random _randomizer = new Random();
+        private static Random _randomizer = new Random();
 
-        public int Min { get; set; }
-        public int Max { get; set; }
-        public int Get { get; set; }
-        public void SetDamageParams(int minValue, int maxValue)
+        public int Min { get; }
+        public int Max { get; }
+        public int Get => _randomizer.Next(Min, Max + 1);
+
+        public Interval(int minValue, int maxValue)
         {
+
             if (minValue > maxValue)
             {
-                Console.WriteLine("Некорректный ввод данных!");
-
+                Console.WriteLine("Некорректный ввод данных! Границы поменяны местами.");
                 (minValue, maxValue) = (maxValue, minValue);
-
             }
+
             else if (minValue < 0)
             {
                 minValue = 0;
-                Console.WriteLine("Значение слишком низкое! Поставлено минимальное(0)");
+                Console.WriteLine("Минимальная граница установлена в 0.");
             }
+
             else if (maxValue < 0)
             {
                 maxValue = 0;
-                Console.WriteLine("Значение слишком низкое! Поставлено минимальное(0)");
+                Console.WriteLine("Максимальная граница установлена в 0.");
             }
-            else if (maxValue == minValue)
+
+            else if (minValue == maxValue)
             {
-                maxValue = 10;
-                Console.WriteLine("Максимальное значение должно быть больше минимального!");
+                maxValue += 10;
+                Console.WriteLine("Максимальная граница увеличена на 10.");
             }
 
-            Max = maxValue;
             Min = minValue;
-
-            _randomizer = new Random();
-
-            Get = _randomizer.Next(Min, Max);
-
+            Max = maxValue;
         }
     }
+
+
     public class Unit
     {
-        private float _health;
+        private float _health = 100f;
 
+        private Interval _damageInterval;
         public string Name { get; }
 
         public float Health => _health;
+        
+        public int Damage => _damageInterval.Get;
 
-        private Random _randomizer = new Random();
+        
+        public Interval DamageInterval => _damageInterval;
 
-        public int Damage { get; set; }      
         public float Armor { get; } = 0.6f;
-        public Unit() : this(name: "Uknown Unit", 0)
+
+       
+        public Unit() : this( "Uknown Unit", 0, 5)
         {
         }
 
-        public Unit(string name, int Value)
+        public Unit(string name,int maxDamage): this(name,0, maxDamage) 
+        {       
+        }
+
+        public Unit(string name,int minDamage, int maxDamage)
         {
             Name = name;
-            SetUnitDamage(Value);
+            _damageInterval = new Interval(minDamage, maxDamage);
         }
 
         public float GetRealHealth()
@@ -87,15 +95,7 @@ namespace Memory
 
         }
 
-        public void SetUnitDamage(int maxValue)//"Также добавляется вместо свойства Damage у Unit.                                                                                           
-        {     //При этом минимальное значение должно быть равно 0" Вот это меня путает, потому что просят сделать метод с двумя числами на ввод,            
-            Interval interval = new Interval();
-
-            interval.SetDamageParams(0, maxValue);
-
-            Damage = interval.Get;
-
-        }
+        
 
     }
 
@@ -103,45 +103,43 @@ namespace Memory
     {
         public string Name { get; }
         public float Durability { get; }
-        public int Min { get; set; }
-        public int Max { get; set; }
+        
+        public Interval DamageInterval { get; }
+        
         public Weapon(string name)
         {
             Name = name;
+            Durability = 1f;
+            DamageInterval = new Interval(1, 5);
+
         }
         public Weapon(string name, int minDamage, int maxDamage) : this(name)
         {
-            Interval interval = new Interval();
-            interval.SetDamageParams(minDamage, maxDamage);
-            Durability = 1f; //Очень странно задание написано для прочности, "Значение задаётся в конструкторе и равно 1; тип float"
-                             //А сам конструктор не дан, поэтому воткнул сюда, не совсем понятно куда его еще можно засунуть
-            Min = interval.Min;
-            Max = interval.Max;
-
+           DamageInterval = new Interval(minDamage, maxDamage);
         }
 
         
 
     }
 
-    public class Room
-    {
-        
-        public Unit Unit { get; set; }
-
-      
-        public Weapon Weapon { get; set; }
-
-        
-        public Room(Unit unit, Weapon weapon)
-        {
-            Unit = unit;    
-            Weapon = weapon; 
-        }
-    }
+    
 
     public class Dungeon
     {
+        struct Room
+        {
+            public Unit Unit { get;}
+
+
+            public Weapon Weapon { get;}
+
+
+            public Room(Unit unit, Weapon weapon)
+            {
+                Unit = unit;
+                Weapon = weapon;
+            }
+        }
         private Room[] _rooms;
       
         
@@ -167,7 +165,7 @@ namespace Memory
 
                 Console.WriteLine($"Room {i + 1}:");
                 Console.WriteLine($"Unit: {room.Unit.Name}, Damage: {room.Unit.Damage}");
-                Console.WriteLine($"Weapon: {room.Weapon.Name}, MinDamage: {room.Weapon.Min}, MaxDamage: {room.Weapon.Max}");
+                Console.WriteLine($"Weapon: {room.Weapon.Name}, MinDamage: {room.Weapon.DamageInterval.Min}, MaxDamage: {room.Weapon.DamageInterval.Max}");
                 Console.WriteLine("—");
             }
         }
